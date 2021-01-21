@@ -12,7 +12,7 @@ class Category(models.Model):
 class Book(models.Model):
     name = models.CharField(max_length=300)
     author_name = models.CharField(max_length=300)
-    book_file = models.FileField(upload_to='uploads/', blank=True)
+    book_file = models.FileField(upload_to='uploads/')
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='my_book')
     readers = models.ManyToManyField(User, through='UserBookRelation', related_name='books')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
