@@ -104,3 +104,31 @@ class BooksApiTestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.book.refresh_from_db()
         self.assertEqual("test_book_author1", self.book.author_name)
+
+    def test_delete(self):
+        self.assertEqual(1, Book.objects.all().count())
+        url = reverse('book-detail', args=(self.book.id,))
+        self.client.force_login(self.user)
+        response = self.client.delete(url)
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(0, Book.objects.all().count())
+
+    def test_delete_not_owner(self):
+        self.assertEqual(1, Book.objects.all().count())
+        self.user2 = User.objects.create(username='test username2')
+        url = reverse('book-detail', args=(self.book.id,))
+        self.client.force_login(self.user2)
+        response = self.client.delete(url)
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+        self.assertEqual({'detail': ErrorDetail(string='You do not have permission to perform this action.',
+                                                code='permission_denied')}, response.data)
+        self.assertEqual(1, Book.objects.all().count())
+
+    def test_delete_not_owner_but_staff(self):
+        self.assertEqual(1, Book.objects.all().count())
+        url = reverse('book-detail', args={self.book.id})
+        self.user2 = User.objects.create(username='test username2', is_staff=True)
+        self.client.force_login(self.user2)
+        response = self.client.delete(url)
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(0, Book.objects.all().count())
